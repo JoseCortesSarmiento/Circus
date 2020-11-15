@@ -1,0 +1,2767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circus</title>
+    <style>
+        canvas {
+          width: 100%;
+          height: 100%;
+        }
+        body {
+          margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Menu -->
+	<div style="position: fixed;">
+		<ul class="menu__lista">
+			<li onclick="" class=""><a href="">Gallery 1</a></li>
+			<li onclick="" class=""><a href="">Gallery 2</a></li>
+			<li onclick="" class=""><a href="">Gallery 3</a></li>
+		</ul>
+    </div>
+    
+    <!--ESTADIO-->
+    <script src="three.min.js"></script>
+    <script src='https://mamboleoo.be/learnThree/demos/OBJLoader.js'></script>
+
+    <script>
+      window.addEventListener("keydown", doKeyDown, true);
+      // agregamos el "listener" para "escuchar" los eventos del teclado
+
+      var zpos = 35;
+      var xpos = 0;
+      var ypos = 5;
+      var x = 0.0;
+      var y = 10;
+      var z = 0.0;
+      var xx = 0.0;
+      var yy = 0.0;
+      var zz = 0.0;
+      var angle = 0;
+      var droneIsUp = 0;
+      var moveDrone = 0;
+      var droneCurrPos = 0;
+      var openTrunk = 0;
+      var trunkCurrPos = 0;
+      var openHood = 0;
+      var hoodCurrPos = 0;
+      var openDoor = 0;
+      var doorCurrPos = 0;
+      var wheelsRotation = 0;
+      var wheelsCurrRad = 0;
+      var carCurrRad = 0;
+      var cameraxpos = 0;
+      var cameraypos = 0;
+      var camerazpos = 0;
+
+      function doKeyDown(evt) {
+        if (evt.keyCode == 38){
+          xpos += 0.31416 * 2 * Math.sin(-angle);
+          zpos -= 0.31416 * 2 * Math.cos(-angle);
+        }
+        if (evt.keyCode == 40){
+          xpos -= 0.31416 * 2 * Math.sin(-angle);
+          zpos += 0.31416 * 2 * Math.cos(-angle);
+        }
+        if (evt.keyCode == 37){
+          angle += 0.1;
+          y += 0.1;
+        }
+        if (evt.keyCode == 39){
+          angle -= 0.1;
+          y -= 0.1;
+        }
+        if (evt.keyCode == 87){
+          ypos += 0.5;
+        }
+        if (evt.keyCode == 83){
+          ypos -= 0.5;
+        }
+        if (evt.keyCode == 65){
+          xpos -= 0.5 * Math.cos(angle);
+          zpos -= 0.5 * Math.sin(-angle);
+        }
+        if (evt.keyCode == 68){
+          xpos += 0.5 * Math.cos(angle);
+          zpos += 0.5 * Math.sin(-angle);
+        }
+        if (evt.keyCode == 88){
+          if (moveDrone){
+            moveDrone = 0;
+          } else {
+            moveDrone = 1;
+          }
+          if(droneIsUp){
+            droneIsUp = 0;
+          } else {
+            droneIsUp = 1;
+          }
+        }
+        if (evt.keyCode == 74){
+          if(openDoor === 1){
+            openDoor = 0;
+          }
+        }
+        if (evt.keyCode == 85){
+          if (openDoor === 0){
+            openDoor = 1;
+          }
+        }
+        if (evt.keyCode == 84){
+          _car.position.z -= Math.sin(wheelsCurrRad) * 3;
+          _car.position.x -= Math.cos(wheelsCurrRad) * 3;
+          _car.rotation.y += carCurrRad;
+          _leftfrontwheel.rotation.z += 0.5;
+          _rightfrontwheel.rotation.z += 0.5;
+          _rearwheels.rotation.z += 0.5;
+        }
+        if (evt.keyCode == 71){
+          _car.position.z += Math.sin(wheelsCurrRad) * 3;
+          _car.position.x += Math.cos(wheelsCurrRad) * 3;
+          _car.rotation.y -= carCurrRad;
+          _leftfrontwheel.rotation.z -= 0.5;
+          _rightfrontwheel.rotation.z -= 0.5;
+          _rearwheels.rotation.z -= 0.5;
+        }
+        if (evt.keyCode == 70){
+          if(wheelsRotation > -5){
+            _leftfrontwheel.rotation.y += 0.15;
+            _rightfrontwheel.rotation.y += 0.15;
+            wheelsRotation--;
+            carCurrRad += 0.15;
+          }
+        }
+        if (evt.keyCode == 72){
+          if(wheelsRotation < 5){
+            _leftfrontwheel.rotation.y -= 0.15;
+            _rightfrontwheel.rotation.y -= 0.15;
+            wheelsRotation++;
+            carCurrRad -= 0.15;
+          }
+        }
+        if (evt.keyCode == 89){
+          if (openHood === 0){
+            openHood = 1;
+          }
+        }
+        if (evt.keyCode == 82){
+          if(openHood === 1){
+            openHood = 0;
+          }
+        }
+        if (evt.keyCode == 86){
+          if (openTrunk === 0){
+            openTrunk = 1;
+          }
+        }
+        if (evt.keyCode == 66){
+          if(openTrunk === 1){
+            openTrunk = 0;
+          }
+        }
+      }
+
+      // three basic components of a scene
+      var scene = new THREE.Scene();
+      var camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.01,
+        1000
+      );
+      var renderer = new THREE.WebGLRenderer();
+
+      // create a Lambert material
+      var LambertMaterial = new THREE.MeshLambertMaterial({
+        color: 0x581845
+      });
+      var naranjaMaterial = new THREE.MeshLambertMaterial({
+        color: 0x900c3f
+      });
+      var lavandaMaterial = new THREE.MeshLambertMaterial({
+        color: 0xc70039
+      });
+      var lavanda1Material = new THREE.MeshLambertMaterial({
+        color: 0xff5733
+      });
+      var lavanda2Material = new THREE.MeshLambertMaterial({
+        color: 0xffc30f
+      });
+      var happy = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("happy.jpg")
+      });
+      var happy1 = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("haapy.jpg")
+      });
+      var metalMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("metal.jpg")
+      });
+
+      var redTexture = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("redtexture.jpg")
+      });
+
+      var yellowTexture = new THREE.MeshLambertMaterial({
+        color: 0xffff00
+      });
+
+      var blackTexture = new THREE.MeshLambertMaterial({
+        color: 0x000000
+      })
+
+      var blueTexture = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("bluetexture.jpg")
+      });
+
+      var redMetal = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("redmetal.jpg")
+      });
+
+      var mirrorMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("espejo.png")
+      });
+
+      var rimMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("rin.png")
+      });
+
+      var redMaterial = new THREE.MeshLambertMaterial({
+        color: 0xff0000
+      });
+
+      var transMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00ffff,
+        transparent: true,
+        opacity: 0.5
+      });
+
+      var transLightMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffff00,
+        transparent: true,
+        opacity: 0.5
+      });
+
+      var transBacklightMaterial = new THREE.MeshBasicMaterial({
+        color: 0xff0000,
+        transparent: true,
+        opacity: 0.5
+      });
+
+      var blackMaterial = new THREE.MeshLambertMaterial({
+        color: 0x000000
+      });
+
+      var rimMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("rin.png")
+      });
+
+      var machine = new THREE.Object3D();
+      var machineBase = new THREE.Object3D();
+      var rueda = new THREE.Object3D();
+      var canasta = new THREE.Object3D();
+      var canastaSuperior = new THREE.Object3D();
+      var canastaInferior = new THREE.Object3D();
+      var canastaDerecha = new THREE.Object3D();
+      var canastaIzquierda = new THREE.Object3D();
+      //canastas
+      var canastaBack = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 5, 0.2),
+        lavandaMaterial
+      );
+      var canastaBottom = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 0.2, 3),
+        lavandaMaterial
+      );
+      var canastaLeft = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 5, 3),
+        lavanda1Material
+      );
+      var canastaRight = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 5, 3),
+        lavanda1Material
+      );
+      var canastaFront = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 1, 0.3),
+        lavanda2Material
+      );
+      var sujetadorSuperior = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 0.5, 32),
+        lavanda2Material
+      );
+      var sujetadorInferior = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 0.5, 32),
+        lavanda2Material
+      );
+      var sujetadorDerecha = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 0.5, 32),
+        lavanda2Material
+      );
+      var sujetadorIzquierda = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 0.5, 32),
+        lavanda2Material
+      );
+
+      //musica//
+      // create an AudioListener and add it to the camera
+      var listener = new THREE.AudioListener();
+      camera.add(listener);
+
+      // create a global audio source
+      var sound = new THREE.Audio(listener);
+
+      // load a sound and set it as the Audio object's buffer
+      var audioLoader = new THREE.AudioLoader();
+      audioLoader.load("musica.mp3", function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setLoop(true);
+        sound.setVolume(0.05);
+        sound.play();
+      });
+      //acaba musica
+
+      canastaBack.position.z = 0.5;
+      canastaBottom.position.y = -2.5;
+      canastaBottom.position.z = 2;
+      canastaLeft.position.z = 2;
+      canastaLeft.position.x = 2.3;
+      canastaRight.position.z = 2;
+      canastaRight.position.x = -2.3;
+      canastaFront.position.z = 3.4;
+      canastaFront.position.y = -2;
+      canastaSuperior.position.y = 11;
+      sujetadorSuperior.position.y = 1;
+      sujetadorSuperior.position.z = 0.5;
+      sujetadorSuperior.rotation.x = 3.1416 / 2;
+      canastaSuperior.add(canastaBack);
+      canastaSuperior.add(canastaBottom);
+      canastaSuperior.add(canastaLeft);
+      canastaSuperior.add(canastaRight);
+      canastaSuperior.add(canastaFront);
+      canastaSuperior.add(sujetadorSuperior);
+      rueda.add(canastaSuperior);
+
+      var canastaBack1 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 5, 0.2),
+        lavandaMaterial
+      );
+      var canastaBottom1 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 0.2, 3),
+        lavandaMaterial
+      );
+      var canastaLeft1 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 5, 3),
+        lavanda1Material
+      );
+      var canastaRight1 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 5, 3),
+        lavanda1Material
+      );
+      var canastaFront1 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 1, 0.3),
+        lavanda2Material
+      );
+      canastaBack1.position.z = 0.5;
+      canastaBottom1.position.y = -2.5;
+      canastaBottom1.position.z = 2;
+      canastaLeft1.position.z = 2;
+      canastaLeft1.position.x = 2.3;
+      canastaRight1.position.z = 2;
+      canastaRight1.position.x = -2.3;
+      canastaFront1.position.z = 3.4;
+      canastaFront1.position.y = -2;
+      canastaInferior.position.y = -11;
+      sujetadorInferior.position.y = 1;
+      sujetadorInferior.position.z = 0.5;
+      sujetadorInferior.rotation.x = 3.1416 / 2;
+      canastaInferior.add(canastaBack1);
+      canastaInferior.add(canastaBottom1);
+      canastaInferior.add(canastaLeft1);
+      canastaInferior.add(canastaRight1);
+      canastaInferior.add(canastaFront1);
+      canastaInferior.add(sujetadorInferior);
+      rueda.add(canastaInferior);
+
+      var canastaBack2 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 5, 0.2),
+        lavandaMaterial
+      );
+      var canastaBottom2 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 0.2, 3),
+        lavandaMaterial
+      );
+      var canastaLeft2 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 5, 3),
+        lavanda1Material
+      );
+      var canastaRight2 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 5, 3),
+        lavanda1Material
+      );
+      var canastaFront2 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 1, 0.3),
+        lavanda2Material
+      );
+      canastaBack2.position.z = 0.5;
+      canastaBottom2.position.y = -2.5;
+      canastaBottom2.position.z = 2;
+      canastaLeft2.position.z = 2;
+      canastaLeft2.position.x = 2.3;
+      canastaRight2.position.z = 2;
+      canastaRight2.position.x = -2.3;
+      canastaFront2.position.z = 3.4;
+      canastaFront2.position.y = -2;
+      canastaDerecha.position.x = -11;
+      sujetadorDerecha.position.y = 1;
+      sujetadorDerecha.position.z = 0.5;
+      sujetadorDerecha.rotation.x = 3.1416 / 2;
+      canastaDerecha.add(canastaBack2);
+      canastaDerecha.add(canastaBottom2);
+      canastaDerecha.add(canastaLeft2);
+      canastaDerecha.add(canastaRight2);
+      canastaDerecha.add(canastaFront2);
+      canastaDerecha.add(sujetadorDerecha);
+      rueda.add(canastaDerecha);
+
+      var canastaBack3 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 5, 0.2),
+        lavandaMaterial
+      );
+      var canastaBottom3 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 0.2, 3),
+        lavandaMaterial
+      );
+      var canastaLeft3 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 5, 3),
+        lavanda1Material
+      );
+      var canastaRight3 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 5, 3),
+        lavanda1Material
+      );
+      var canastaFront3 = new THREE.Mesh(
+        new THREE.BoxGeometry(5, 1, 0.3),
+        lavanda2Material
+      );
+      canastaBack3.position.z = 0.5;
+      canastaBottom3.position.y = -2.5;
+      canastaBottom3.position.z = 2;
+      canastaLeft3.position.z = 2;
+      canastaLeft3.position.x = 2.3;
+      canastaRight3.position.z = 2;
+      canastaRight3.position.x = -2.3;
+      canastaFront3.position.z = 3.4;
+      canastaFront3.position.y = -2;
+      canastaIzquierda.position.x = 11;
+      sujetadorIzquierda.position.y = 1;
+      sujetadorIzquierda.position.z = 0.5;
+      sujetadorIzquierda.rotation.x = 3.1416 / 2;
+      canastaIzquierda.add(canastaBack3);
+      canastaIzquierda.add(canastaBottom3);
+      canastaIzquierda.add(canastaLeft3);
+      canastaIzquierda.add(canastaRight3);
+      canastaIzquierda.add(canastaFront3);
+      canastaIzquierda.add(sujetadorIzquierda);
+      rueda.add(canastaIzquierda);
+      //rueda
+      var ruedaExterior = new THREE.Mesh(
+        new THREE.TorusGeometry(11, 0.5, 16, 100),
+        LambertMaterial
+      );
+      var barraSuperior = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.5, 10, 32),
+        naranjaMaterial
+      );
+      var barraInferior = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.5, 10, 32),
+        naranjaMaterial
+      );
+      var barraIzquierda = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.5, 10, 32),
+        naranjaMaterial
+      );
+      var barraDerecha = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.5, 10, 32),
+        naranjaMaterial
+      );
+
+      rueda.add(ruedaExterior);
+      rueda.add(barraSuperior);
+      rueda.add(barraInferior);
+      //rueda.add(sujetadorInferior);
+      rueda.add(barraIzquierda);
+      //rueda.add(sujetadorIzquierda);
+      rueda.add(barraDerecha);
+      rueda.add(canasta);
+      barraSuperior.position.y = 6;
+      barraInferior.position.y = -6;
+      barraIzquierda.position.x = 6;
+      barraIzquierda.rotation.z = 3.1416 / 2;
+      barraDerecha.position.x = -6;
+      barraDerecha.rotation.z = 3.1416 / 2;
+      rueda.position.y = 17;
+      //base
+      var leftBaseSupport = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 20, 32),
+        lavanda2Material
+      );
+      var rightBaseSupport = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 20, 32),
+        lavanda1Material
+      );
+      var backLeftBaseSupport = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 20, 32),
+        lavanda1Material
+      );
+      var backRightBaseSupport = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 20, 32),
+        lavanda2Material
+      );
+      var bigBase = new THREE.Mesh(
+        new THREE.BoxGeometry(25, 0.3, 25),
+        LambertMaterial
+      );
+      var baseSupport = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.2, 1.2, 15, 32),
+        naranjaMaterial
+      );
+      machineBase.add(bigBase);
+      machineBase.add(baseSupport);
+      machineBase.add(leftBaseSupport);
+      machineBase.add(rightBaseSupport);
+      machineBase.add(backLeftBaseSupport);
+      machineBase.add(backRightBaseSupport);
+      rightBaseSupport.position.x = 5.55;
+      rightBaseSupport.position.z = 6.55;
+      rightBaseSupport.rotation.z = 0.55;
+      leftBaseSupport.position.x = -5.55;
+      leftBaseSupport.position.z = 6.55;
+      leftBaseSupport.rotation.z = -0.55;
+      backRightBaseSupport.position.x = 5.55;
+      backRightBaseSupport.position.z = -6.55;
+      backRightBaseSupport.rotation.z = 0.55;
+      backLeftBaseSupport.position.x = -5.55;
+      backLeftBaseSupport.position.z = -6.55;
+      backLeftBaseSupport.rotation.z = -0.55;
+      baseSupport.position.y = 13;
+      baseSupport.rotation.x = 1.5;
+
+      machine.add(machineBase);
+      machine.add(rueda);
+      machine.add(canasta);
+      machineBase.position.y = 4;
+      bigBase.position.y = -3;
+      leftBaseSupport.position.y = 4;
+      rightBaseSupport.position.y = 4;
+      backLeftBaseSupport.position.y = 4;
+      backRightBaseSupport.position.y = 4;
+
+      //boomerang
+      var maquina = new THREE.Object3D();
+      var base = new THREE.Object3D();
+      var arm = new THREE.Object3D();
+      var platillo = new THREE.Object3D();
+      var booMaterial = new THREE.MeshLambertMaterial({
+        color: 0x61f7ff
+      });
+      var boo1Material = new THREE.MeshLambertMaterial({
+        color: 0x8fbaff
+      });
+      var boo2Material = new THREE.MeshLambertMaterial({
+        color: 0xff0af7
+      });
+      var boo3Material = new THREE.MeshLambertMaterial({
+        color: 0x3b00d1
+      });
+      var boo4Material = new THREE.MeshLambertMaterial({
+        color: 0xff1492
+      });
+      //base
+      var leftBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 30, 32),
+        boo3Material
+      );
+      var rightBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 30, 32),
+        boo3Material
+      );
+      var backLeftBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 30, 32),
+        boo3Material
+      );
+      var backRightBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 30, 32),
+        boo3Material
+      );
+      var boxBase = new THREE.Mesh(
+        new THREE.BoxGeometry(8, 1, 13),
+        boo2Material
+      );
+
+      var sphereBase = new THREE.Mesh(
+        new THREE.SphereGeometry(3, 32, 100),
+        boo4Material
+      );
+
+      base.add(leftBase);
+      base.add(rightBase);
+      base.add(backLeftBase);
+      base.add(backRightBase);
+      base.add(boxBase);
+      base.add(sphereBase);
+      boxBase.position.y = 12;
+      rightBase.position.z = 5;
+      rightBase.position.x = 10;
+      rightBase.rotation.z = 3.1416 / 5;
+      leftBase.position.z = 5;
+      leftBase.position.x = -10;
+      leftBase.rotation.z = -(3.1416 / 5);
+      backRightBase.position.z = -5;
+      backRightBase.position.x = 10;
+      backRightBase.rotation.z = 3.1416 / 5;
+      backLeftBase.position.z = -5;
+      backLeftBase.position.x = -10;
+      backLeftBase.rotation.z = -(3.1416 / 5);
+      sphereBase.position.y = 11;
+      sphereBase.rotation.y = 3.1416 / 2;
+      base.position.y = 10;
+      base.position.x = 9.5;
+      maquina.add(base);
+      maquina.position.z = 30;
+      maquina.position.x = 20;
+      // aqui todo ok
+
+      //platillo
+      var disco = new THREE.Mesh(
+        new THREE.TorusGeometry(6.7, 2, 6, 20),
+        booMaterial
+      );
+      var baseDisco = new THREE.Mesh(
+        new THREE.BoxGeometry(11, 0.1, 10.89),
+        happy
+      );
+      var asiento = new THREE.Mesh(
+        new THREE.TorusGeometry(4.5, 1, 6, 20),
+        boo2Material
+      );
+      platillo.add(disco);
+      platillo.add(baseDisco);
+      platillo.add(asiento);
+
+      baseDisco.position.y = 1.5;
+      platillo.position.x = 9.5;
+      platillo.position.y = 13;
+      arm.position.y = 0;
+      asiento.rotation.x = 3.1416 / 2;
+      disco.rotation.x = 3.1416 / 2;
+
+      //brazo
+      var brazo = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 16, 32),
+        boo4Material
+      );
+      arm.add(brazo);
+      brazo.position.x = 9.5;
+      brazo.position.y = 6;
+      arm.add(platillo);
+      maquina.add(arm);
+      arm.position.y = 20;
+      arm.rotation.x = 3.1416;
+      maquina.position.y = 0;
+    
+      //Carrusel
+      var c_pillar = new THREE.Object3D();
+      var c_poles = new THREE.Object3D();
+      var c_cars = new THREE.Object3D();
+      var c_mechanism = new THREE.Object3D();
+
+      var pillar = new THREE.Mesh(
+        new THREE.CylinderGeometry(3, 3, 12, 48),
+        redTexture
+      );
+
+      var c_base = new THREE.Mesh(
+        new THREE.CylinderGeometry(10, 10, 1, 48),
+        redTexture
+      );
+
+      var c_top = new THREE.Mesh(
+        new THREE.CylinderGeometry(10, 10, 1, 48),
+        redTexture
+      );
+
+      var c_cone = new THREE.Mesh(
+        new THREE.ConeGeometry(10, 10, 48),
+        yellowTexture
+      );
+
+      c_pillar.add(c_base);
+      c_pillar.add(c_top);
+      c_pillar.add(c_cone);
+      c_pillar.add(pillar);
+
+      var pole1 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 10, 47),
+        blueTexture
+      );
+      var pole2 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 10, 47),
+        blueTexture
+      );
+      var pole3 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 10, 47),
+        blueTexture
+      );
+      var pole4 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 10, 47),
+        blueTexture
+      );
+      var pole5 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 10, 47),
+        blueTexture
+      );
+      var pole6 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 10, 47),
+        blueTexture
+      );
+      var pole7 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 10, 47),
+        blueTexture
+      );
+      var pole8 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.2, 0.2, 10, 47),
+        blueTexture
+      );
+
+      c_poles.add(pole1);
+      c_poles.add(pole2);
+      c_poles.add(pole3);
+      c_poles.add(pole4);
+      c_poles.add(pole5);
+      c_poles.add(pole6);
+      c_poles.add(pole7);
+      c_poles.add(pole8);
+
+      let rotationNeeded = 0.7854;
+
+      var c_car1 = new THREE.Object3D();
+      var c_car2 = new THREE.Object3D();
+      var c_car3 = new THREE.Object3D();
+      var c_car4 = new THREE.Object3D();
+      var c_car5 = new THREE.Object3D();
+      var c_car6 = new THREE.Object3D();
+      var c_car7 = new THREE.Object3D();
+      var c_car8 = new THREE.Object3D();
+
+      // Definir coche, copiar al resto
+      var chasis1 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), redMaterial);
+      var seat1 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.5, 1),
+        redMaterial
+      );
+      var glass1 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.5, 1),
+        transMaterial
+      );
+      var wheel11 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel21 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel31 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel41 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+
+      var chasis2 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), redMaterial);
+      var seat2 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.5, 1),
+        redMaterial
+      );
+      var glass2 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.5, 1),
+        transMaterial
+      );
+      var wheel12 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel22 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel32 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel42 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+
+      var chasis3 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), redMaterial);
+      var seat3 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.5, 1),
+        redMaterial
+      );
+      var glass3 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.5, 1),
+        transMaterial
+      );
+      var wheel13 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel23 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel33 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel43 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+
+      var chasis4 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), redMaterial);
+      var seat4 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.5, 1),
+        redMaterial
+      );
+      var glass4 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.5, 1),
+        transMaterial
+      );
+      var wheel14 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel24 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel34 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel44 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+
+      var chasis5 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), redMaterial);
+      var seat5 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.5, 1),
+        redMaterial
+      );
+      var glass5 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.5, 1),
+        transMaterial
+      );
+      var wheel15 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel25 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel35 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel45 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+
+      var chasis6 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), redMaterial);
+      var seat6 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.5, 1),
+        redMaterial
+      );
+      var glass6 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.5, 1),
+        transMaterial
+      );
+      var wheel16 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel26 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel36 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel46 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+
+      var chasis7 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), redMaterial);
+      var seat7 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.5, 1),
+        redMaterial
+      );
+      var glass7 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.5, 1),
+        transMaterial
+      );
+      var wheel17 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel27 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel37 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel47 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+
+      var chasis8 = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), redMaterial);
+      var seat8 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5, 1.5, 1),
+        redMaterial
+      );
+      var glass8 = new THREE.Mesh(
+        new THREE.BoxGeometry(0.2, 0.5, 1),
+        transMaterial
+      );
+      var wheel18 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel28 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel38 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+      var wheel48 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 48, 48),
+        blackMaterial
+      );
+
+      c_car1.add(chasis1);
+      c_car1.add(seat1);
+      c_car1.add(glass1);
+      c_car1.add(wheel11);
+      c_car1.add(wheel21);
+      c_car1.add(wheel31);
+      c_car1.add(wheel41);
+      seat1.position.y = 0.5;
+      seat1.position.x = -0.5;
+      glass1.position.y = 0.7;
+      glass1.position.x = 0.5;
+      wheel11.position.x = 1;
+      wheel11.position.z = 0.5;
+      wheel11.position.y = -0.5;
+      wheel21.position.x = 1;
+      wheel21.position.z = -0.5;
+      wheel21.position.y = -0.5;
+      wheel31.position.x = -1;
+      wheel31.position.z = -0.5;
+      wheel31.position.y = -0.5;
+      wheel41.position.x = -1;
+      wheel41.position.z = 0.5;
+      wheel41.position.y = -0.5;
+      c_car1.rotation.y = rotationNeeded * 2;
+      c_car2.add(chasis2);
+      c_car2.add(seat2);
+      c_car2.add(glass2);
+      c_car2.add(wheel12);
+      c_car2.add(wheel22);
+      c_car2.add(wheel32);
+      c_car2.add(wheel42);
+      seat2.position.y = 0.5;
+      seat2.position.x = -0.5;
+      glass2.position.y = 0.7;
+      glass2.position.x = 0.5;
+      wheel12.position.x = 1;
+      wheel12.position.z = 0.5;
+      wheel12.position.y = -0.5;
+      wheel22.position.x = 1;
+      wheel22.position.z = -0.5;
+      wheel22.position.y = -0.5;
+      wheel32.position.x = -1;
+      wheel32.position.z = -0.5;
+      wheel32.position.y = -0.5;
+      wheel42.position.x = -1;
+      wheel42.position.z = 0.5;
+      wheel42.position.y = -0.5;
+      c_car2.rotation.y = rotationNeeded * 3;
+      c_car3.add(chasis3);
+      c_car3.add(seat3);
+      c_car3.add(glass3);
+      c_car3.add(wheel13);
+      c_car3.add(wheel23);
+      c_car3.add(wheel33);
+      c_car3.add(wheel43);
+      seat3.position.y = 0.5;
+      seat3.position.x = -0.5;
+      glass3.position.y = 0.7;
+      glass3.position.x = 0.5;
+      wheel13.position.x = 1;
+      wheel13.position.z = 0.5;
+      wheel13.position.y = -0.5;
+      wheel23.position.x = 1;
+      wheel23.position.z = -0.5;
+      wheel23.position.y = -0.5;
+      wheel33.position.x = -1;
+      wheel33.position.z = -0.5;
+      wheel33.position.y = -0.5;
+      wheel43.position.x = -1;
+      wheel43.position.z = 0.5;
+      wheel43.position.y = -0.5;
+      c_car3.rotation.y = rotationNeeded * 4;
+      c_car4.add(chasis4);
+      c_car4.add(seat4);
+      c_car4.add(glass4);
+      c_car4.add(wheel14);
+      c_car4.add(wheel24);
+      c_car4.add(wheel34);
+      c_car4.add(wheel44);
+      seat4.position.y = 0.5;
+      seat4.position.x = -0.5;
+      glass4.position.y = 0.7;
+      glass4.position.x = 0.5;
+      wheel14.position.x = 1;
+      wheel14.position.z = 0.5;
+      wheel14.position.y = -0.5;
+      wheel24.position.x = 1;
+      wheel24.position.z = -0.5;
+      wheel24.position.y = -0.5;
+      wheel34.position.x = -1;
+      wheel34.position.z = -0.5;
+      wheel34.position.y = -0.5;
+      wheel44.position.x = -1;
+      wheel44.position.z = 0.5;
+      wheel44.position.y = -0.5;
+      c_car4.rotation.y = rotationNeeded * 5;
+      c_car5.add(chasis5);
+      c_car5.add(seat5);
+      c_car5.add(glass5);
+      c_car5.add(wheel15);
+      c_car5.add(wheel25);
+      c_car5.add(wheel35);
+      c_car5.add(wheel45);
+      seat5.position.y = 0.5;
+      seat5.position.x = -0.5;
+      glass5.position.y = 0.7;
+      glass5.position.x = 0.5;
+      wheel15.position.x = 1;
+      wheel15.position.z = 0.5;
+      wheel15.position.y = -0.5;
+      wheel25.position.x = 1;
+      wheel25.position.z = -0.5;
+      wheel25.position.y = -0.5;
+      wheel35.position.x = -1;
+      wheel35.position.z = -0.5;
+      wheel35.position.y = -0.5;
+      wheel45.position.x = -1;
+      wheel45.position.z = 0.5;
+      wheel45.position.y = -0.5;
+      c_car5.rotation.y = rotationNeeded * 6;
+      c_car6.add(chasis6);
+      c_car6.add(seat6);
+      c_car6.add(glass6);
+      c_car6.add(wheel16);
+      c_car6.add(wheel26);
+      c_car6.add(wheel36);
+      c_car6.add(wheel46);
+      seat6.position.y = 0.5;
+      seat6.position.x = -0.5;
+      glass6.position.y = 0.7;
+      glass6.position.x = 0.5;
+      wheel16.position.x = 1;
+      wheel16.position.z = 0.5;
+      wheel16.position.y = -0.5;
+      wheel26.position.x = 1;
+      wheel26.position.z = -0.5;
+      wheel26.position.y = -0.5;
+      wheel36.position.x = -1;
+      wheel36.position.z = -0.5;
+      wheel36.position.y = -0.5;
+      wheel46.position.x = -1;
+      wheel46.position.z = 0.5;
+      wheel46.position.y = -0.5;
+      c_car6.rotation.y = rotationNeeded * 7;
+      c_car7.add(chasis7);
+      c_car7.add(seat7);
+      c_car7.add(glass7);
+      c_car7.add(wheel17);
+      c_car7.add(wheel27);
+      c_car7.add(wheel37);
+      c_car7.add(wheel47);
+      seat7.position.y = 0.5;
+      seat7.position.x = -0.5;
+      glass7.position.y = 0.7;
+      glass7.position.x = 0.5;
+      wheel17.position.x = 1;
+      wheel17.position.z = 0.5;
+      wheel17.position.y = -0.5;
+      wheel27.position.x = 1;
+      wheel27.position.z = -0.5;
+      wheel27.position.y = -0.5;
+      wheel37.position.x = -1;
+      wheel37.position.z = -0.5;
+      wheel37.position.y = -0.5;
+      wheel47.position.x = -1;
+      wheel47.position.z = 0.5;
+      wheel47.position.y = -0.5;
+      c_car7.rotation.y = rotationNeeded * 0;
+      c_car8.add(chasis8);
+      c_car8.add(seat8);
+      c_car8.add(glass8);
+      c_car8.add(wheel18);
+      c_car8.add(wheel28);
+      c_car8.add(wheel38);
+      c_car8.add(wheel48);
+      seat8.position.y = 0.5;
+      seat8.position.x = -0.5;
+      glass8.position.y = 0.7;
+      glass8.position.x = 0.5;
+      wheel18.position.x = 1;
+      wheel18.position.z = 0.5;
+      wheel18.position.y = -0.5;
+      wheel28.position.x = 1;
+      wheel28.position.z = -0.5;
+      wheel28.position.y = -0.5;
+      wheel38.position.x = -1;
+      wheel38.position.z = -0.5;
+      wheel38.position.y = -0.5;
+      wheel48.position.x = -1;
+      wheel48.position.z = 0.5;
+      wheel48.position.y = -0.5;
+      c_car8.rotation.y = rotationNeeded * 1;
+      c_cars.add(c_car1);
+      c_cars.add(c_car2);
+      c_cars.add(c_car3);
+      c_cars.add(c_car4);
+      c_cars.add(c_car5);
+      c_cars.add(c_car6);
+      c_cars.add(c_car7);
+      c_cars.add(c_car8);
+
+      c_mechanism.add(c_pillar);
+      c_mechanism.add(c_poles);
+      c_mechanism.add(c_cars);
+
+      // posicionar
+      c_mechanism.position.x = -25;
+      c_mechanism.position.z = 25;
+      c_mechanism.position.y = 0;
+      c_pillar.position.y = 0;
+      pillar.position.y = 6;
+      c_base.position.y = 1;
+      c_top.position.y = 12;
+      c_cone.position.y = 17.5;
+      c_poles.position.y = 0;
+      c_cars.position.y = 0;
+      c_cars.position.x = 0;
+      c_cars.position.z = 0;
+
+      pole1.position.x = 7;
+      pole1.position.y = 7;
+      pole1.position.z = 0;
+      pole2.position.x = 5;
+      pole2.position.y = 7;
+      pole2.position.z = -5;
+      pole3.position.x = 0;
+      pole3.position.y = 7;
+      pole3.position.z = -7;
+      pole4.position.x = -5;
+      pole4.position.y = 7;
+      pole4.position.z = -5;
+      pole5.position.x = -7;
+      pole5.position.y = 7;
+      pole5.position.z = 0;
+      pole6.position.x = -5;
+      pole6.position.y = 7;
+      pole6.position.z = 5;
+      pole7.position.x = 0;
+      pole7.position.y = 7;
+      pole7.position.z = 7;
+      pole8.position.x = 5;
+      pole8.position.y = 7;
+      pole8.position.z = 5;
+      c_car1.position.x = 7;
+      c_car1.position.y = 7;
+      c_car1.position.z = 0;
+      c_car2.position.x = 5;
+      c_car2.position.y = 7;
+      c_car2.position.z = -5;
+      c_car3.position.x = 0;
+      c_car3.position.y = 7;
+      c_car3.position.z = -7;
+      c_car4.position.x = -5;
+      c_car4.position.y = 7;
+      c_car4.position.z = -5;
+      c_car5.position.x = -7;
+      c_car5.position.y = 7;
+      c_car5.position.z = 0;
+      c_car6.position.x = -5;
+      c_car6.position.y = 7;
+      c_car6.position.z = 5;
+      c_car7.position.x = 0;
+      c_car7.position.y = 7;
+      c_car7.position.z = 7;
+      c_car8.position.x = 5;
+      c_car8.position.y = 7;
+      c_car8.position.z = 5;
+
+      // Hummer model
+      var _car = new THREE.Object3D();
+      var _body = new THREE.Object3D();
+      var _hood = new THREE.Object3D();
+      var _roof = new THREE.Object3D();
+      var _base = new THREE.Object3D();
+      var _mirrors = new THREE.Object3D();
+      var _body = new THREE.Object3D();
+      var _wheels = new THREE.Object3D();
+      var _frontwheels = new THREE.Object3D();
+      var _rearwheels = new THREE.Object3D();
+      var _leftfrontwheel = new THREE.Object3D();
+      var _rightfrontwheel = new THREE.Object3D();
+      var _doors = new THREE.Object3D();
+      var _leftdoor = new THREE.Object3D();
+      var _rightdoor = new THREE.Object3D();
+      var _leftdoorback = new THREE.Object3D();
+      var _rightdoorback = new THREE.Object3D();
+      var _trunk = new THREE.Object3D();
+      var _drone = new THREE.Object3D();
+      var _rotor1 = new THREE.Object3D();
+      var _rotor2 = new THREE.Object3D();
+      var _rotor3 = new THREE.Object3D();
+      var _rotor4 = new THREE.Object3D();
+
+      var _toproof = new THREE.Mesh(
+        new THREE.BoxGeometry(20,1,20),
+        redMetal
+      );
+
+      var _toproofsupport1 = new THREE.Mesh(
+        new THREE.BoxGeometry(1,5,1),
+        redMetal
+      );
+
+      var _toproofsupport2 = _toproofsupport1.clone();
+      var _toproofsupport4 = _toproofsupport1.clone();
+      var _toproofsupport5 = _toproofsupport1.clone();
+      var _toproofsupport3 = new THREE.Mesh(
+        new THREE.BoxGeometry(1,5,3),
+        redMetal
+      )
+      var _toproofsupport6 = _toproofsupport3.clone();
+      var _bottomroof = _toproof.clone();
+      var _frontglass = new THREE.Mesh(
+        new THREE.BoxGeometry(1,3,18),
+        transMaterial
+      );
+      var _backglass = new THREE.Mesh(
+        new THREE.BoxGeometry(1,3,14),
+        transMaterial
+      );
+      var _frontroofbase = new THREE.Mesh(
+        new THREE.BoxGeometry(1,1,20),
+        redMetal
+      );
+      var _middleroofbase = _frontroofbase.clone();
+      var _backroofbase = _frontroofbase.clone();
+      var _mirrorsupport  = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.25,0.25,2,32),
+        redMetal
+      );
+      var _mirrorspace = new THREE.Mesh(
+        new THREE.BoxGeometry(1,1,3),
+        redMetal
+      );
+      var _inmirror = new THREE.Mesh(
+        new THREE.BoxGeometry(0.125,1,3),
+        mirrorMaterial
+      );
+
+      _roof.add(_toproof);
+      _roof.add(_toproofsupport1);
+      _roof.add(_toproofsupport2);
+      _roof.add(_toproofsupport3);
+      _roof.add(_toproofsupport4);
+      _roof.add(_toproofsupport5);
+      _roof.add(_toproofsupport6);
+      _roof.add(_frontglass);
+      _roof.add(_backglass);
+      _roof.add(_frontroofbase);
+      _roof.add(_middleroofbase);
+      _roof.add(_backroofbase);
+      _roof.add(_mirrorsupport);
+      _roof.add(_mirrorspace);
+      _roof.add(_inmirror)
+
+      _roof.position.y = 25;
+      _toproofsupport1.position.x = -9.5;
+      _toproofsupport1.position.y = -2.5;
+      _toproofsupport1.position.z = 9.5;
+      _toproofsupport2.position.y = -2.5;
+      _toproofsupport2.position.z = 9.5;
+      _toproofsupport3.position.x = 9.5;
+      _toproofsupport3.position.y = -2.5;
+      _toproofsupport3.position.z = 8.5;
+      _toproofsupport4.position.x = -9.5;
+      _toproofsupport4.position.y = -2.5;
+      _toproofsupport4.position.z = -9.5;
+      _toproofsupport5.position.y = -2.5;
+      _toproofsupport5.position.z = -9.5;
+      _toproofsupport6.position.x = 9.5;
+      _toproofsupport6.position.y = -2.5;
+      _toproofsupport6.position.z = -8.5;
+      _bottomroof.position.y = -4.5;
+      _frontglass.position.x = -9.5;
+      _frontglass.position.y = -2.5;
+      _backglass.position.x = 9.5;
+      _backglass.position.y = -2.5;
+      _frontroofbase.position.x = -9.5;
+      _frontroofbase.position.y = -4.5;
+      _middleroofbase.position.y = -4.5;
+      _backroofbase.position.x = 9.5;
+      _backroofbase.position.y = -4.5
+      _mirrorsupport.position.x = -8;
+      _mirrorsupport.position.y = -1.5;
+      _mirrorspace.position.x = -7.9;
+      _mirrorspace.position.y = -2;
+      _inmirror.position.x = -7.3;
+      _inmirror.position.y = -2;
+      
+
+
+      var _carbase = new THREE.Mesh(
+        new THREE.BoxGeometry(25,2,20),
+        redMetal
+      );
+      var _frontsupport = new THREE.Mesh(
+        new THREE.BoxGeometry(5,6,20),
+        redMetal
+      );
+      var _frontalsupport = new THREE.Mesh(
+        new THREE.BoxGeometry(2,4,20),
+        redMetal
+      );
+      var _capobase = new THREE.Mesh(
+        new THREE.BoxGeometry(6,2,20),
+        redMetal
+      );
+      var _frontdefense = new THREE.Mesh(
+        new THREE.BoxGeometry(4,3,20),
+        redMetal
+      );
+      var _grill = new THREE.Mesh(
+        new THREE.BoxGeometry(2,5,20),
+        redMetal
+      );
+      var _backsupport = new THREE.Mesh(
+        new THREE.BoxGeometry(3,7,20),
+        redMetal
+      );
+      var _backfiller = new THREE.Mesh(
+        new THREE.BoxGeometry(2,7,20),
+        redMetal
+      );
+      var _trunkbase = new THREE.Mesh(
+        new THREE.BoxGeometry(12,3,20),
+        redMetal
+      );
+      var _defense = new THREE.Mesh(
+        new THREE.BoxGeometry(3,3,20),
+        redMetal
+      );
+      var _pillar = new THREE.Mesh(
+        new THREE.BoxGeometry(1,11,20),
+        redMetal
+      );
+      var _crankshaft = new THREE.Mesh(
+        new THREE.BoxGeometry(38,1,8),
+        metalMaterial
+      );
+      var _frontaxis = new THREE.Mesh(
+        new THREE.CylinderGeometry(1,1,18,32),
+        metalMaterial
+      );
+      var _backaxis = _frontaxis.clone()
+      var _frontleftlight = new THREE.Mesh(
+        new THREE.SphereGeometry(1.5,32,32),
+        transLightMaterial
+      );
+      var _frontrightlight = _frontleftlight.clone();
+      var _backleftlight = new THREE.Mesh(
+        new THREE.CylinderGeometry(1.5,1.5,1,32),
+        transBacklightMaterial
+      );
+      var _backrightlight = _backleftlight.clone();
+      var _seat = new THREE.Mesh(
+        new THREE.BoxGeometry(5,2,18),
+        blackMaterial
+      );
+      var _frontplate = new THREE.Mesh(
+        new THREE.BoxGeometry(0.125,2,3),
+        blackMaterial
+      );
+      var _backplate = _frontplate.clone();
+
+      _base.add(_carbase);
+      _base.add(_frontsupport);
+      _base.add(_frontalsupport);
+      _base.add(_capobase);
+      _base.add(_frontdefense);
+      _base.add(_grill);
+      _base.add(_backsupport);
+      _base.add(_backfiller);
+      _base.add(_trunkbase);
+      _base.add(_defense);
+      _base.add(_pillar);
+      _base.add(_crankshaft);
+      _base.add(_frontaxis);
+      _base.add(_backaxis);
+      _base.add(_frontleftlight);
+      _base.add(_frontrightlight);
+      _base.add(_backleftlight);
+      _base.add(_backrightlight);
+      _base.add(_seat);
+      _base.add(_frontplate);
+      _base.add(_backplate);
+      
+      _base.position.x = 1;
+      _base.position.y = 13;
+      _carbase.position.x = -2.5;
+      _frontsupport.position.x = -12.5;
+      _frontsupport.position.y = 4;
+      _frontalsupport.position.x = -16;
+      _frontalsupport.position.y = 5;
+      _capobase.position.x = -20;
+      _capobase.position.y = 6;
+      _frontdefense.position.x = -24;
+      _frontdefense.position.y = 5.5;
+      _grill.position.x = -25;
+      _grill.position.y = 2;
+      _backfiller.position.x = 9;
+      _backfiller.position.y = 4;
+      _backsupport.position.x = 11.5;
+      _backsupport.position.y = 2.5;
+      _trunkbase.position.x = 19;
+      _trunkbase.position.y = 4.5;
+      _defense.position.x = 23.5;
+      _defense.position.y = 1.5;
+      _pillar.position.x = -1;
+      _pillar.position.y = 4.5;
+      _crankshaft.position.y = -1.5;
+      _frontaxis.rotation.x = 1.5708;
+      _frontaxis.position.x = -19.5;
+      _frontaxis.position.y = -1.5;
+      _backaxis.rotation.x = 1.5708;
+      _backaxis.position.x = 18.5;
+      _backaxis.position.y = -1.5;
+      _frontleftlight.position.x = -26;
+      _frontleftlight.position.y = 5.5;
+      _frontleftlight.position.z = 8;
+      _frontrightlight.position.x = -26;
+      _frontrightlight.position.y = 5.5;
+      _frontrightlight.position.z = -8;
+      _backleftlight.rotation.z = 1.5708;
+      _backleftlight.position.x = 25.5;
+      _backleftlight.position.y = 4.5;
+      _backleftlight.position.z = 8;
+      _backrightlight.rotation.z = 1.5708;
+      _backrightlight.position.x = 25.5;
+      _backrightlight.position.y = 4.5;
+      _backrightlight.position.z = -8;
+      _seat.position.y = 2;
+      _seat.position.x = -4;
+      _frontplate.position.x = -26.55;
+      _frontplate.position.y = 1;
+      _backplate.position.x = 25;
+      
+
+      var _latmirrorleft = new THREE.Mesh(
+        new THREE.BoxGeometry(0.5,1.5,2.5),
+        redMetal
+      );
+      var _latmirrorright = _latmirrorleft.clone();
+      var _mirrorhorizontalsupportleft = new THREE.Mesh(
+        new THREE.CylinderGeometry(.125,.125,1,8),
+        redMetal
+      );
+      var _mirrorhorizontalsupportright = _mirrorhorizontalsupportleft.clone();
+      var _mirrordiagonalsupportleft = new THREE.Mesh(
+        new THREE.CylinderGeometry(.125,.125,2,8),
+        redMetal
+      );
+      var _mirrordiagonalsupportright = _mirrordiagonalsupportleft.clone();
+      var _mirrorleft = new THREE.Mesh(
+        new THREE.BoxGeometry(.125,1.5,2.5),
+        mirrorMaterial
+      );
+      var _mirrorright = _mirrorleft.clone();
+
+      _mirrors.add(_latmirrorleft);
+      _mirrors.add(_latmirrorright);
+      _mirrors.add(_mirrorhorizontalsupportleft);
+      _mirrors.add(_mirrorhorizontalsupportright);
+      _mirrors.add(_mirrordiagonalsupportleft);
+      _mirrors.add(_mirrordiagonalsupportright);
+      _mirrors.add(_mirrorleft);
+      _mirrors.add(_mirrorright);
+
+      _mirrors.position.y = 19.5;
+      _mirrors.position.x = -10;
+
+      _latmirrorleft.position.y = 2;
+      _latmirrorleft.position.z = 13;
+      _latmirrorright.position.y = 2;
+      _latmirrorright.position.z = -13;
+      _mirrorleft.position.x = .3;
+      _mirrorleft.position.y = 2;
+      _mirrorleft.position.z = 13;
+      _mirrorright.position.x = .3;
+      _mirrorright.position.y = 2;
+      _mirrorright.position.z = -13;
+      _mirrorhorizontalsupportleft.rotation.x = 1.5708;
+      _mirrorhorizontalsupportleft.position.z = 10.5;
+      _mirrorhorizontalsupportright.rotation.x = 1.5708;
+      _mirrorhorizontalsupportright.position.z = -10.5;
+      _mirrordiagonalsupportleft.rotation.x = 1.5708/2;
+      _mirrordiagonalsupportleft.position.y = 0.75;
+      _mirrordiagonalsupportleft.position.z = 11.75;
+      _mirrordiagonalsupportright.rotation.x = -1.5708/2;
+      _mirrordiagonalsupportright.position.y = 0.75;
+      _mirrordiagonalsupportright.position.z = -11.75;
+
+
+      _body.add(_roof);
+      _body.add(_base);
+      _body.add(_mirrors);
+
+      var _hoodlid = new THREE.Mesh(
+        new THREE.BoxGeometry(15,.125,10),
+        redMetal
+      );
+      var _hoodfront = new THREE.Mesh(
+        new THREE.BoxGeometry(.125,1,10),
+        redMetal
+      );
+
+      _hood.add(_hoodlid);
+      _hood.add(_hoodfront);
+
+      _hood.position.y = 19;
+      _hood.position.x = 11;
+      _hoodlid.position.x = 8;
+      _hoodfront.position.y = -0.5;
+      _hoodfront.position.x = 15.5;
+
+      var _trunklid = new THREE.Mesh(
+        new THREE.BoxGeometry(12,.125,12),
+        redMetal
+      );
+      var _trunkfront = new THREE.Mesh(
+        new THREE.BoxGeometry(.125,1,12),
+        redMetal
+      );
+
+      _trunk.add(_trunklid);
+      _trunk.add(_trunkfront);
+      
+      _trunk.position.y = 20;
+      _trunk.position.x = -12;
+      _trunklid.position.x = -7;
+      _trunkfront.position.x = -13;
+      _trunkfront.position.y = -0.5;
+
+      var _tire = new THREE.Mesh(
+        new THREE.CylinderGeometry(3.5,3.5,2,32),
+        blackMaterial
+      )
+      var _rim = new THREE.Mesh(
+        new THREE.CylinderGeometry(3.5,3.5,.01,32),
+        rimMaterial
+      )
+      
+      _leftfrontwheel.add(_tire);
+      _leftfrontwheel.add(_rim)
+      _tire.rotation.x = 1.5708;
+      _rim.rotation.x = 1.5708;
+      _rim.position.z = 1;
+      _rightfrontwheel = _leftfrontwheel.clone();
+      _rightfrontwheel.rotation.y = 1.5708*2 
+      _frontwheels.add(_leftfrontwheel);
+      _frontwheels.add(_rightfrontwheel);
+      _leftfrontwheel.position.z = 10;
+      _rightfrontwheel.position.z = -10;
+      _leftfrontwheel.position.z = 10;
+      _rightfrontwheel.position.z = -10;  
+      _rearwheels = _frontwheels.clone();
+
+      _wheels.add(_frontwheels);
+      _wheels.add(_rearwheels);
+      _wheels.position.x = -18.5;
+      _wheels.position.y = 11.25;
+      _rearwheels.position.x = 39;
+
+      var _upperhinge = new THREE.Mesh(
+        new THREE.CylinderGeometry(1,1,1,8),
+        redMetal
+      );
+      var _lowerhinge = _upperhinge.clone();
+      var _glassdoor = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5,4.5,.5),
+        transMaterial
+      );
+      var _doorbody = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5,6,1.5),
+        redMetal
+      )
+      _leftdoor.add(_upperhinge);
+      _leftdoor.add(_lowerhinge);
+      _leftdoor.add(_glassdoor);
+      _leftdoor.add(_doorbody);
+      _doorbody.position.x = 4.25;
+      _glassdoor.position.x = 4.25;
+      _glassdoor.position.y = 5.25;
+      _upperhinge.position.x = .45;
+      _upperhinge.position.y = 1;
+      _lowerhinge.position.x = .45;
+      _lowerhinge.position.y = -1;
+
+      
+      
+      _rightdoor = _leftdoor.clone();
+      _leftdoorback = _leftdoor.clone();
+      _rightdoorback = _leftdoor.clone(); 
+  
+      _doors.add(_leftdoor);
+      _doors.add(_rightdoor);
+      _doors.add(_leftdoorback);
+      _doors.add(_rightdoorback);
+      /* position */
+
+      _doors.position.x = -9;
+      _doors.position.y = 17;
+      _leftdoor.position.z = 10;
+      _leftdoorback.position.x = 9.5;
+      _leftdoorback.position.z = 10;
+      _rightdoor.position.z = -10;
+      _rightdoorback.position.x = 9.5;
+      _rightdoorback.position.z = -10;
+      
+      var _dronebody = new THREE.Mesh(
+        new THREE.SphereGeometry(2,32,32),
+        blackMaterial
+      );
+      var _dronediagonal1 = new THREE.Mesh(
+        new THREE.CylinderGeometry(.5,.5,10,32),
+        blackMaterial
+      );
+      var _dronediagonal2 = new THREE.Mesh(
+        new THREE.CylinderGeometry(.5,.5,10,32),
+        blackMaterial
+      );
+      _dronediagonal1.rotation.x = 1.5708;
+      _dronediagonal2.rotation.x = 1.5708;
+      _dronediagonal1.rotation.z = 1.5708/2;
+      _dronediagonal2.rotation.z = -1.5708/2;
+      
+      var _dronepillar1 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5,0.5,2),
+        blackMaterial
+      );
+      var _dronepillar2 = _dronepillar1.clone()
+      var _dronepillar3 = _dronepillar1.clone()
+      var _dronepillar4 = _dronepillar1.clone()
+      var _dronepillartip1 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.125,0.125,2),
+        blackMaterial
+      );
+      var _dronepillartip2 = _dronepillartip1.clone()
+      var _dronepillaritp3 = _dronepillartip1.clone()
+      var _dronepillartip4 = _dronepillartip1.clone()
+      _dronepillar1.position.x = 3.5;
+      _dronepillar1.position.z = 3.5;
+      _dronepillar2.position.x = 3.5;
+      _dronepillar2.position.z = -3.5;
+      _dronepillar3.position.x = -3.5;
+      _dronepillar3.position.z = 3.5;
+      _dronepillar4.position.x = -3.5;
+      _dronepillar4.position.z = -3.5;
+      _dronepillartip1.position.x = 3.5;
+      _dronepillartip1.position.y = 0.5;
+      _dronepillartip1.position.z = 3.5;
+      _dronepillartip2.position.x = 3.5;
+      _dronepillartip2.position.y = 0.5;
+      _dronepillartip2.position.z = -3.5;
+      _dronepillaritp3.position.x = -3.5;
+      _dronepillaritp3.position.y = 0.5;
+      _dronepillaritp3.position.z = 3.5;
+      _dronepillartip4.position.x = -3.5;
+      _dronepillartip4.position.y = 0.5;
+      _dronepillartip4.position.z = -3.5;
+      var _dronehelix1 = new THREE.Mesh(
+        new THREE.BoxGeometry(2,.125,.125),
+        blackMaterial
+      );
+      var _dronehelix2 = _dronehelix1.clone();
+      var _dronehelix3 = _dronehelix1.clone();
+      var _dronehelix4 = _dronehelix1.clone();
+      var _dronehelix5 = _dronehelix1.clone();
+      var _dronehelix6 = _dronehelix1.clone();
+      var _dronehelix7 = _dronehelix1.clone();
+      var _dronehelix8 = _dronehelix1.clone();
+      _rotor1.add(_dronehelix1);
+      _rotor1.add(_dronehelix2);
+      _dronehelix2.rotation.y = 1.5708;
+      _rotor2.add(_dronehelix3);
+      _rotor2.add(_dronehelix4);
+      _dronehelix4.rotation.y = 1.5708;
+      _rotor3.add(_dronehelix5);
+      _rotor3.add(_dronehelix6);
+      _dronehelix6.rotation.y = 1.5708;
+      _rotor4.add(_dronehelix7);
+      _rotor4.add(_dronehelix8);
+      _dronehelix8.rotation.y = 1.5708;
+      _rotor1.position.x = 3.5;
+      _rotor1.position.y = 1.5;
+      _rotor1.position.z = 3.5;
+      _rotor2.position.x = 3.5;
+      _rotor2.position.y = 1.5;
+      _rotor2.position.z = -3.5;
+      _rotor3.position.x = -3.5;
+      _rotor3.position.y = 1.5;
+      _rotor3.position.z = 3.5;
+      _rotor4.position.x = -3.5;
+      _rotor4.position.y = 1.5;
+      _rotor4.position.z = -3.5;
+
+      _drone.add(_dronebody);
+      _drone.add(_dronediagonal1);
+      _drone.add(_dronediagonal2);
+      _drone.add(_dronepillar1);
+      _drone.add(_dronepillar2);
+      _drone.add(_dronepillar3);
+      _drone.add(_dronepillar4);
+      _drone.add(_dronepillartip1);
+      _drone.add(_dronepillartip2);
+      _drone.add(_dronepillaritp3);
+      _drone.add(_dronepillartip4);
+      _drone.add(_rotor1);
+      _drone.add(_rotor2);
+      _drone.add(_rotor3);
+      _drone.add(_rotor4);
+
+      _drone.position.y = 27.75;
+      
+      _car.add(_body);
+      _car.add(_hood);
+      _car.add(_wheels);
+      _car.add(_doors);
+      _car.add(_trunk);
+      _car.add(_drone);
+      _car.position.y = -7;
+      _car.position.x = -50;
+      _car.position.z = -25;
+ 
+      //estadio
+      
+      var estadio = new THREE.Object3D();
+      var exterior = new THREE.Object3D();
+      var interior = new THREE.Object3D();
+      var gradas = new THREE.Object3D();
+      var asiento = new THREE.Object3D();
+      var asientos = new THREE.Object3D();
+      var porteria = new THREE.Object3D();
+      var porteria1 = new THREE.Object3D();
+      var palcos = new THREE.Object3D();
+      var palcos1 = new THREE.Object3D();
+      var lamp = new THREE.Object3D();
+      var lamp1 = new THREE.Object3D();
+      var techoAux = new THREE.Object3D();
+      var entrada = new THREE.Object3D();
+      var puertaEntrada = new THREE.Object3D();
+      var sillon = new THREE.Object3D();
+
+      //materiales
+      var sillonMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("sill.jpg")
+      });
+      var logoMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("logo.jpg")
+      });
+      var canchaMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("pasto.jpg")
+      });
+      var pelotaMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("fut.jpg")
+      });
+      var entradaMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("puerta.jpg")
+      });
+      var herMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("her.jpg")
+      });
+      var himMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("him.jpg")
+      });
+      var asientoMaterial = new THREE.MeshLambertMaterial({
+        color: 0x4E5AA9
+      });
+      var asientosMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("velvet.jpg")
+      });
+      var asiento1Material = new THREE.MeshLambertMaterial({
+        color: 0x343C71
+      });
+      var asiento1sMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("velvet1.jpg")
+      });
+      var canchMaterial = new THREE.MeshLambertMaterial({
+        color: 0x2cb037
+      });
+      var lamparaMaterial = new THREE.MeshLambertMaterial({
+        color: 0xE2E1E1
+      });
+      var afueraMaterial = new THREE.MeshLambertMaterial({
+        color: 0xFF1717
+      });
+      var puertaMaterial = new THREE.MeshLambertMaterial({
+        color: 0x756F6F
+      });
+      var gradaMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("marmol.jpg")
+      });
+      var afuera1Material = new THREE.MeshLambertMaterial({
+        color: 0xFF8484,
+        wireframe: true
+      });
+      var cementMaterial = new THREE.MeshLambertMaterial({
+        color: 0x636060
+      });
+      var cementoMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("detal.jpg")
+      });
+      var barraMaterial = new THREE.MeshLambertMaterial({
+        color: 0xFFFFFF
+      });
+      var focoMaterial = new THREE.MeshLambertMaterial({
+        color: 0xFFFBDB
+      });
+      var ventanaMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x63D0DF, 
+        transparent: true, 
+        opacity: 0.5
+      });
+      var techoMaterial = new THREE.MeshLambertMaterial({
+        color: 0xEDEDED,
+        side: THREE.DoubleSide
+      });
+      var techosMaterial = new THREE.MeshLambertMaterial({
+        color: 0x383838,
+        wireframe: true
+      });
+      var doradoMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("dorado.jpg")
+      });
+      //exterior
+      var anillo = new THREE.Mesh(
+        new THREE.TorusBufferGeometry( 60, 10, 20, 30 ),
+        afueraMaterial
+      );
+      var anillo1 = new THREE.Mesh(
+        new THREE.TorusBufferGeometry( 60, 10, 20, 30 ),
+        afuera1Material
+      );
+      var pared = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 20, 80),
+        puertaMaterial
+      );
+      var pared1 = new THREE.Mesh(
+        new THREE.BoxGeometry(80, 20, 1),
+        puertaMaterial
+      );
+      var pared2 = new THREE.Mesh(
+        new THREE.BoxGeometry(80, 20, 1),
+        puertaMaterial
+      );
+      var pared3 = new THREE.Mesh(
+        new THREE.BoxGeometry(1, 20, 80),
+        puertaMaterial
+      );
+      var cancha = new THREE.Mesh(
+        new THREE.BoxGeometry(40, 0.1, 50),
+        canchaMaterial
+      );
+      var logo = new THREE.Mesh(
+        new THREE.BoxGeometry(15, 4, 0.5),
+        logoMaterial
+      );
+      var roof = new THREE.Mesh(
+        new THREE.RingBufferGeometry( 30, 62, 7),
+        techoMaterial
+      );
+      var roofex = new THREE.Mesh(
+        new THREE.RingBufferGeometry( 30, 62, 7),
+        techosMaterial
+      );
+      var door = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 10, 11),
+        ventanaMaterial
+      );
+      var manija = new THREE.Mesh(
+        new THREE.TorusBufferGeometry( 0.5, 0.1, 16, 100),
+        doradoMaterial
+      );
+      
+      puertaEntrada.add(door);
+      puertaEntrada.add(manija);
+      entrada.add(puertaEntrada);
+      entrada.position.y=-14;
+      entrada.position.x=50;
+      entrada.position.z=44;
+      entrada.rotation.y=-3.1416/4;
+      door.position.z=-1;
+      manija.position.x=0;
+      manija.position.z=1;
+      var puertaEntrada1 = puertaEntrada.clone();
+      
+    puertaEntrada1.position.z=8.8;
+      entrada.add(puertaEntrada1);
+      puertaEntrada1.rotation.y=-3.2;
+      
+      var entrada1=entrada.clone();
+      exterior.add(entrada);
+      exterior.add(entrada1);
+      entrada1.position.z=-44;
+      entrada1.position.x=-50.5;
+      entrada1.rotation.y=2.35;
+      var entrada2=entrada.clone();
+      exterior.add(entrada2);
+      entrada2.position.z=-44;
+      entrada2.position.x=+50.5;
+      entrada2.rotation.y=-2.35;
+      var entrada3=entrada2.clone();
+      exterior.add(entrada3);
+      entrada3.position.z=50.5;
+      entrada3.position.x=-44;
+
+      //porteria atras
+      var barra = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry( 0.2, 0.2, 8, 30 ),
+        barraMaterial
+      );
+      var barra1 = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry( 0.2, 0.2, 8, 30 ),
+        barraMaterial
+      );
+      var barra2 = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry( 0.2, 0.2, 12.9, 50 ),
+        barraMaterial
+      );
+      //porteria frente 
+      var barras = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry( 0.2, 0.2, 8, 30 ),
+        barraMaterial
+      );
+      var barras1 = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry( 0.2, 0.2, 8, 50 ),
+        barraMaterial
+      );
+      var barras2 = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry( 0.2, 0.2, 12.9, 50 ),
+        barraMaterial
+      );
+      //pelota
+      var ploader = new THREE.TextureLoader();
+      var pelotaloader = new THREE.OBJLoader();
+        var pel = new THREE.Object3D();
+        var texturepel = new THREE.MeshLambertMaterial({
+                map: ploader.load("objetos/balon.png")
+            });
+            pelotaloader.load(
+            'objetos/balon.obj ',
+            function (object) {
+                object.traverse(function (node) {
+                    if (node.isMesh) node.material = texturepel;
+                });
+                pel.add(object);
+                pel.scale.set(0.025,0.025,0.025);
+                pel.position.y=0.3;
+                interior.add(pel);  
+            }
+            
+        );
+      //arbitro
+      var loader = new THREE.TextureLoader();
+      var arbitroloader = new THREE.OBJLoader();
+        var per = new THREE.Object3D();
+        var textureper = new THREE.MeshLambertMaterial({
+                map: loader.load("objetos/arbitro.png")
+            });
+        arbitroloader.load(
+            'objetos/arbitro.obj ',
+            function (object) {
+                object.traverse(function (node) {
+                    if (node.isMesh) node.material = textureper;
+                });
+                per.add(object);
+                per.scale.set(0.025,0.025,0.025);
+                per.position.z=-5;
+                per.rotation.x= THREE.Math.degToRad(-90);
+                interior.add(per);  
+            }
+            
+        );
+      //palco frente
+      var lamparaAtras = new THREE.Mesh(
+        new THREE.ConeBufferGeometry( 0.5, 0.5, 5 ),
+        lamparaMaterial
+      );
+      var foco = new THREE.Mesh(
+        new THREE.SphereBufferGeometry( 0.2, 32, 32 ),
+        focoMaterial
+      );
+      var paredAtras = new THREE.Mesh(
+        new THREE.BoxGeometry(40, 6, 0.1),
+        afueraMaterial
+      );
+      var ventana = new THREE.Mesh(
+        new THREE.BoxGeometry(20, 6, 0.1),
+        ventanaMaterial
+      );
+      var ventana1 = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5, 6, 0.1),
+        ventanaMaterial
+      );
+      var ventana2 = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5, 6, 0.1),
+        ventanaMaterial
+      );
+      var piso = new THREE.Mesh(
+        new THREE.BoxGeometry(20, 0.1, 15),
+        puertaMaterial
+      );
+      var piso1 = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5, 0.1, 15),
+        puertaMaterial
+      );
+      
+      var piso2 = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5, 0.1, 15),
+        puertaMaterial
+      );
+      var techo = new THREE.Mesh(
+        new THREE.BoxGeometry(20, 0.1, 15),
+        puertaMaterial
+      );
+      var techo1 = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5, 0.1, 15),
+        puertaMaterial
+      );
+      var techo2 = new THREE.Mesh(
+        new THREE.BoxGeometry(8.5, 0.1, 15),
+        puertaMaterial
+      );
+      var puerta = new THREE.Mesh(
+        new THREE.BoxGeometry(3, 5, 0.35),
+        entradaMaterial
+      );
+      var linea = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry( 0.15, 0.15, 6, 30 ),
+        ventanaMaterial
+      );
+      var linea1 = new THREE.Mesh(
+        new THREE.CylinderBufferGeometry( 0.15, 0.15, 6, 30 ),
+        ventanaMaterial
+      );
+      //sillon frente
+      var sloader = new THREE.TextureLoader();
+      var sillonloader = new THREE.OBJLoader();
+        var sill = new THREE.Object3D();
+        var sill1 = new THREE.Object3D();
+        var textureSill = new THREE.MeshLambertMaterial({
+                map: loader.load("objetos/couch.png")
+            });
+        sillonloader.load(
+            'objetos/couch.obj ',
+            function (object) {
+                object.traverse(function (node) {
+                    if (node.isMesh) node.material = textureSill;
+                });
+                sill.add(object);
+                sill.scale.set(0.008,0.008,0.008);
+                sill.position.z=4.5;
+                sill.position.y=-2.8;
+                sill.rotation.x= THREE.Math.degToRad(-90);
+            }
+            
+        );
+        sillon.add(sill);
+        palcos.add(sillon);
+        //sillon atras
+      var s1loader = new THREE.TextureLoader();
+      var sillon1loader = new THREE.OBJLoader();
+        var sill1 = new THREE.Object3D();
+        var textureSill1 = new THREE.MeshLambertMaterial({
+                map: loader.load("objetos/couch.png")
+            });
+        sillon1loader.load(
+            'objetos/couch.obj ',
+            function (object) {
+                object.traverse(function (node) {
+                    if (node.isMesh) node.material = textureSill1;
+                });
+                sill1.add(object);
+                sill1.scale.set(0.008,0.008,0.008);
+                sill1.position.z=95;
+                sill1.position.y=-2.8;
+                sill1.rotation.x= THREE.Math.degToRad(-90);
+                sill1.rotation.z= THREE.Math.degToRad(-180);
+            }
+            
+        );
+        sillon.add(sill1);
+        palcos.add(sillon);
+        //sillon izq
+      var s2loader = new THREE.TextureLoader();
+      var sillon2loader = new THREE.OBJLoader();
+        var sill2 = new THREE.Object3D();
+        var textureSill2 = new THREE.MeshLambertMaterial({
+                map: loader.load("objetos/couch.png")
+            });
+        sillon2loader.load(
+            'objetos/couch.obj ',
+            function (object) {
+                object.traverse(function (node) {
+                    if (node.isMesh) node.material = textureSill1;
+                });
+                sill2.add(object);
+                sill2.scale.set(0.008,0.008,0.008);
+                sill2.position.z=52;
+                sill2.position.y=-2.8;
+                sill2.position.x=45;
+                sill2.rotation.x= THREE.Math.degToRad(-90);
+                sill2.rotation.z= THREE.Math.degToRad(-90);
+            }
+            
+        );
+        sillon.add(sill2);
+        palcos.add(sillon);
+        //sillon der
+      var s3loader = new THREE.TextureLoader();
+      var sillon3loader = new THREE.OBJLoader();
+        var sill3 = new THREE.Object3D();
+        var textureSill3 = new THREE.MeshLambertMaterial({
+                map: loader.load("objetos/couch.png")
+            });
+        sillon3loader.load(
+            'objetos/couch.obj ',
+            function (object) {
+                object.traverse(function (node) {
+                    if (node.isMesh) node.material = textureSill1;
+                });
+                sill3.add(object);
+                sill3.scale.set(0.008,0.008,0.008);
+                sill3.position.z=52;
+                sill3.position.x=-45;
+                sill3.position.y=-2.8;
+                sill3.rotation.x= THREE.Math.degToRad(-90);
+                sill3.rotation.z= THREE.Math.degToRad(90);
+            }
+            
+        );
+        sillon.add(sill3);
+        palcos.add(sillon);
+     //posiciones 
+      lamparaAtras.position.y=6;
+      lamparaAtras.position.z=3;
+      foco.position.y=5.8;
+      foco.position.z=3;
+      ventana.position.z=7.5;
+      ventana.position.y=3;
+      ventana1.position.x=13.78;
+      ventana1.position.z=5.3;
+      ventana1.position.y=3;
+      ventana1.rotation.y=3.1416/6;
+      ventana2.position.x=-13.78;
+      ventana2.position.z=5.3;
+      ventana2.position.y=3;
+      ventana2.rotation.y=-3.1416/6;
+      piso1.position.x=10;
+      piso1.position.z=-1.2;
+      piso1.rotation.y=3.1416/6;
+      piso2.position.x=-10;
+      piso2.position.z=-1.2;
+      piso2.rotation.y=-3.1416/6;
+      techo.position.y=6;
+      techo1.position.x=10;
+      techo1.position.z=-1.2;
+      techo1.rotation.y=3.1416/6;
+      techo1.position.y=6;
+      techo2.position.x=-10;
+      techo2.position.z=-1.2;
+      techo2.rotation.y=-3.1416/6;
+      techo2.position.y=6;
+      palcos.position.z=-50;
+      palcos.position.y=15;
+      linea.position.y=3;
+      linea.position.x=-10;
+      linea.position.z=7.5;
+      linea1.position.y=3;
+      linea1.position.x=10;
+      linea1.position.z=7.5;
+      puerta.position.z=1.5;
+      puerta.position.y=2.5;
+      paredAtras.position.z=1.5;
+      paredAtras.position.y=3;
+      //luz
+      var lampLight = new THREE.PointLight(0xFFFBDB);
+      lampLight.position.y = 6;
+      lampLight.position.z = 3;
+      lampLight.position.x = 15;
+      lampLight.intensity=1;
+      lampLight.distance=80;
+      var outLight = new THREE.PointLight(0xCBCBCB);
+      outLight.position.y = 40;
+      outLight.position.x = 7;
+      outLight.intensity=3;
+      outLight.distance=100;
+      var pelotaLight = new THREE.SpotLight(0xCBCBCB);
+      pelotaLight.position.y=1.5;
+      pelotaLight.distance=10; 
+      pelotaLight.intensity=10;
+      interior.add(outLight);
+      interior.add(pelotaLight);
+      var masluz = new THREE.PointLight(0xFFFFFF);
+      masluz.position.x = -70;
+      masluz.position.y = 5;
+      masluz.position.z = -2;
+
+      lamp.add(foco);
+      lamp.add(lampLight);
+      palcos.add(lamp);
+      palcos.add(puerta);
+      palcos.add(paredAtras);
+      palcos.add(techo);
+      palcos.add(techo1);
+      palcos.add(techo2);
+      palcos.add(ventana);
+      palcos.add(ventana1);
+      palcos.add(ventana2);
+      palcos.add(linea);
+      palcos.add(linea1);
+      palcos.add(piso);
+      palcos.add(piso1);
+      palcos.add(piso2);
+      interior.add(palcos); 
+      //palco atras
+      var palcoAtras = palcos.clone();
+      interior.add(palcoAtras);
+      palcoAtras.position.z=50;
+      palcoAtras.rotation.x=3.1416;
+      palcoAtras.rotation.z=3.1416;
+      //palco izquierda
+      var palcoIzq = palcos.clone();
+      interior.add(palcoIzq);
+      palcoIzq.position.x=50;
+      palcoIzq.position.z=2;
+      palcoIzq.rotation.y=-3.1416/2;
+      //palco derecha
+      var palcoDer = palcos.clone();
+      interior.add(palcoDer);
+      palcoDer.position.x=-50;
+      palcoDer.position.z=2;
+      palcoDer.rotation.y=3.1416/2;
+      //gradas
+      var grad = new THREE.Mesh(
+        new THREE.BoxGeometry(9, 2, 25),
+        puertaMaterial
+      );
+      var grad1 = new THREE.Mesh(
+        new THREE.BoxGeometry(9, 2, 20),
+        puertaMaterial
+      );
+      var grad2 = new THREE.Mesh(
+        new THREE.BoxGeometry(9, 2, 10),
+        puertaMaterial
+      );
+      var sit = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 0.5, 1),
+        asientosMaterial
+      );
+      var sitBack = new THREE.Mesh(
+        new THREE.BoxGeometry(2, 2, 0.5),
+        asiento1Material
+      );
+      var her = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 3, 0.01),
+        herMaterial
+      );
+      var him = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 3, 0.01),
+        himMaterial
+      );
+      asiento.add(sit);
+      asiento.add(sitBack);
+      sit.position.x=-30;
+      sit.position.z=18.5;
+      sitBack.position.y=0;
+      sitBack.position.x=-30;
+      sitBack.position.z=18;
+      asiento.position.x=33;
+      asiento.position.y=1.2;
+      asiento.position.z=-8;
+      her.position.y=6.5;
+      her.position.z=-7;
+      her.position.x=1.2;
+      him.position.y=6.5;
+      him.position.z=-7;
+      him.position.x=-0.5;
+      asiento1=asiento.clone();
+      asiento1.position.x=30;
+      asiento2=asiento.clone();
+      asiento2.position.x=27;
+      asientos.add(asiento);
+      asientos.add(asiento1);
+      asientos.add(asiento2);
+      asientos1 = asientos.clone();
+      gradas.add(asientos1);
+      asientos1.position.z=-4;
+      gradas.add(her);
+      gradas.add(him);
+      asientoMedio = asientos.clone();
+      asientoMedio.position.y=2;
+      asientoMedio.position.z=-7;
+      asientoMedio1 = asientos.clone();
+      asientoMedio1.position.y=2;
+      asientoMedio1.position.z=-10;
+      asientoMedio2 = asientos.clone();
+      asientoMedio2.position.y=2;
+      asientoMedio2.position.z=-13;
+      gradas.add(asientoMedio);
+      gradas.add(asientoMedio1);
+      gradas.add(asientoMedio2);
+      gradas.add(asientos);
+      gradas.add(grad);
+      gradas.add(grad1);
+      gradas.add(grad2);
+      grad1.position.y=+2;
+      grad1.position.z=-5;
+      grad2.position.y=+4;
+      grad2.position.z=-10;
+      gradas.position.z=-40;
+      gradas.position.x=30;
+      interior.add(gradas);
+      for(var cont=-30;cont<30;cont+=9){
+      gradas1=gradas.clone();
+      gradas1.position.x=cont;
+      interior.add(gradas1);
+      //gradas atras
+      gradas2 = gradas1.clone();
+      gradas2.position.z=+40;
+      gradas2.rotation.y=3.1416;
+      interior.add(gradas2);
+    }
+      //gradas derecha
+      gradasDer=gradas.clone();
+      gradasDer.position.z=-18;
+      gradasDer.position.x=40;
+      gradasDer.rotation.y=-3.1416/2;
+      interior.add(gradasDer);
+      for(var cont=-18;cont<22;cont+=9){
+      gradasDer1 = gradasDer.clone();
+      gradasDer1.position.z=cont;
+      interior.add(gradasDer1);
+      //gradas inzquierda
+      gradasIzq = gradasDer1.clone();
+      gradasIzq.rotation.y=3.1416/2;
+      gradasIzq.position.x=-40;
+      interior.add(gradasIzq);
+      }
+      
+      //atras
+      porteria.add(barra);
+      barra.position.x= 6.3;
+      porteria.add(barra1);
+      barra1.position.x= -6.3;
+      porteria.add(barra2);
+      barra2.rotation.z=3.1416/2;
+      barra2.position.x= 0;
+      barra2.position.y= 4;
+      porteria.position.z = -22.5;
+      //frente
+      porteria1.add(barras);
+      barras.position.x= 6.3;
+      porteria1.add(barras1);
+      barras1.position.x= -6.3;
+      porteria1.add(barras2);
+      barras2.rotation.z=3.1416/2;
+      barras2.position.x= 0;
+      barras2.position.y= 4;
+      porteria1.position.z = 22.5;
+      //
+      interior.add(porteria);
+      interior.add(porteria1);
+      anillo.rotation.x=3.1416/2;
+      anillo1.rotation.x=3.1416/2;
+      exterior.add(anillo);
+      exterior.add(anillo1);
+      exterior.add(pared);
+      pared.position.x=-55;
+      pared.position.y=-10;
+      exterior.add(pared1);
+      pared1.position.z=55;
+      pared1.position.y=-10;
+      exterior.add(pared2);
+      pared2.position.z=-55;
+      pared2.position.y=-10;
+      exterior.add(pared3);
+      pared3.position.x=55;
+      pared3.position.y=-10;
+      logo.position.z=69.7;
+      interior.add(cancha);
+      exterior.add(logo);
+      exterior.position.y=20;
+      exterior.position.x=20;
+      interior.position.y=1;
+      interior.position.x=20;
+      //techo
+      techoAux.rotation.z=3.1416/4;
+      techoAux.rotation.x=3.1416/2;
+      techoAux.position.y=8;
+      techoAux.add(roof);
+      techoAux.add(roofex);
+      exterior.add(techoAux);
+      estadio.add(exterior);
+      estadio.add(interior);
+      //piso
+      var pisoEstadio = new THREE.Mesh(
+        new THREE.BoxGeometry(150, 1, 150),
+        cementoMaterial
+      );
+      
+      estadio.add(pisoEstadio);
+      pisoEstadio.position.x=25;
+      estadio.position.x=100;
+      
+      //pasto
+      var pasto = new THREE.BoxGeometry(200, 1, 200);
+
+      var grassMaterial = new THREE.MeshLambertMaterial({
+        map: THREE.ImageUtils.loadTexture("grass.jpg")
+      });
+
+      var object = new THREE.Mesh(pasto, grassMaterial);
+      object.position.x = -50;
+
+      group = new THREE.Object3D(); // create an empty container
+      //piso
+      group.add(object); // add a mesh with geometry to it
+
+
+      group.add(machine);
+      group.add(maquina);
+      group.add(c_mechanism);
+      group.add(estadio);
+      group.add(_car);
+      scene.add(group); // add the group to the scene
+
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      // create some point lights
+      var pointLight = new THREE.PointLight(0xffffff);
+      var pointLight2 = new THREE.PointLight(0xffffff);
+      var pointLight3 = new THREE.PointLight(0xffffff);
+
+      // set its position
+      pointLight.position.x = 10;
+      pointLight.position.y = 50;
+      pointLight.position.z = 130;
+
+      // add to the scene
+      scene.add(pointLight);
+
+      // set its position
+      pointLight2.position.x = 10;
+      pointLight2.position.y = -50;
+      pointLight2.position.z = -130;
+
+      // add to the scene
+      scene.add(pointLight2);
+
+      // set its position
+      pointLight3.position.x = 30;
+      pointLight3.position.y = -40;
+      pointLight3.position.z = -70;
+
+      // add to the scene
+      scene.add(pointLight3);
+
+      // set the background color
+      renderer.setClearColor(0x2070bc, 1);
+
+      var topeMasX = 0;
+      var topeMenosX = 25;
+      var accel = 0.005;
+      var desAccel = 0.005;
+      var pendulumVelocity = 0;
+      var maxy1 = 10;
+      var miny1 = 3;
+      var maxy2 = 10;
+      var miny2 = 3;
+      var maxy3 = 10;
+      var miny3 = 3;
+      var maxy4 = 10;
+      var miny4 = 3;
+      var maxy5 = 10;
+      var miny5 = 3;
+      var maxy6 = 10;
+      var miny6 = 3;
+      var maxy7 = 10;
+      var miny7 = 3;
+      var maxy8 = 10;
+      var miny8 = 3;
+      var carVelocity1 = 0.1;
+      var carVelocity2 = 0.2;
+      var carVelocity3 = 0.05;
+      var carVelocity4 = 0.08;
+      var carVelocity5 = 0.11;
+      var carVelocity6 = 0.23;
+      var carVelocity7 = 0.09;
+      var carVelocity8 = 0.15;
+
+      function reset() {
+        return 0;
+      }
+      function resetA() {
+        return 0.005;
+      }
+      var render = function() {
+        requestAnimationFrame(render);
+        camera.position.z = zpos - 20;
+        camera.position.x = xpos -40;
+        camera.position.y = ypos;
+        camera.rotation.y = angle;
+        // Drone movement
+        if (droneIsUp){
+          _rotor1.rotation.y += 0.5;
+          _rotor2.rotation.y -= 0.5;
+          _rotor3.rotation.y += 0.5;
+          _rotor4.rotation.y -= 0.5;
+        }
+        if (moveDrone === 1 && droneCurrPos < 15){
+          _drone.position.y += 0.2;
+          droneCurrPos++;
+        }
+        else{
+          if(moveDrone === 0 && droneCurrPos > 0){
+            _drone.position.y -= 0.4;
+            droneCurrPos -= 2;
+          }
+        }
+        // props movement
+        if (openTrunk === 1 && trunkCurrPos < 5){
+          _hood.rotation.z += 0.2;
+          trunkCurrPos++;
+        }
+        else{
+          if(openTrunk === 0 && trunkCurrPos > 0){
+            _hood.rotation.z -= 0.2;
+            trunkCurrPos--;
+          }
+        } 
+        if (openHood === 1 && hoodCurrPos < 5){
+          _trunk.rotation.z -= 0.2;
+          hoodCurrPos++;
+        }
+        else{
+          if(openHood === 0 && hoodCurrPos > 0){
+            _trunk.rotation.z += 0.2;
+            hoodCurrPos--;
+          }
+        }
+        if (openDoor === 1 && doorCurrPos < 5){
+          _leftdoor.rotation.y -= 0.2
+          _rightdoor.rotation.y += 0.2
+          _leftdoorback.rotation.y -= 0.2
+          _rightdoorback.rotation.y += 0.2
+          doorCurrPos++;
+        }
+        else{
+          if(openDoor === 0 && doorCurrPos > 0){
+            _leftdoor.rotation.y += 0.2
+            _rightdoor.rotation.y -= 0.2
+            _leftdoorback.rotation.y += 0.2
+            _rightdoorback.rotation.y -= 0.2
+            doorCurrPos--;
+          }
+        } 
+      
+        //rueda de la fortuna
+        rueda.rotation.z += 0.009;
+        baseSupport.rotation.y -= 0.0047;
+        canastaSuperior.rotation.z -= 0.009;
+        canastaInferior.rotation.z -= 0.009;
+        canastaDerecha.rotation.z -= 0.009;
+        canastaIzquierda.rotation.z -= 0.009;
+        // Carrousel cars movement
+        if (maxy1 < 50) {
+          c_car1.position.y -= carVelocity1;
+          maxy1++;
+        } else if (miny1 < 50) {
+          c_car1.position.y += carVelocity1;
+          miny1++;
+        }
+        if (maxy1 == 50 && miny1 == 50) {
+          maxy1 = reset();
+          miny1 = reset();
+        }
+
+        if (maxy2 < 30) {
+          c_car2.position.y -= carVelocity2;
+          maxy2++;
+        } else if (miny2 < 30) {
+          c_car2.position.y += carVelocity2;
+          miny2++;
+        }
+        if (maxy2 == 30 && miny2 == 30) {
+          maxy2 = reset();
+          miny2 = reset();
+        }
+
+        if (maxy3 < 50) {
+          c_car3.position.y -= carVelocity3;
+          maxy3++;
+        } else if (miny3 < 50) {
+          c_car3.position.y += carVelocity3;
+          miny3++;
+        }
+        if (maxy3 == 50 && miny3 == 50) {
+          maxy3 = reset();
+          miny3 = reset();
+        }
+
+        if (maxy4 < 50) {
+          c_car4.position.y -= carVelocity4;
+          maxy4++;
+        } else if (miny4 < 50) {
+          c_car4.position.y += carVelocity4;
+          miny4++;
+        }
+        if (maxy4 == 50 && miny4 == 50) {
+          maxy4 = reset();
+          miny4 = reset();
+        }
+
+        if (maxy5 < 50) {
+          c_car5.position.y -= carVelocity5;
+          maxy5++;
+        } else if (miny5 < 50) {
+          c_car5.position.y += carVelocity5;
+          miny5++;
+        }
+        if (maxy5 == 50 && miny5 == 50) {
+          maxy5 = reset();
+          miny5 = reset();
+        }
+
+        if (maxy6 < 25) {
+          c_car6.position.y -= carVelocity6;
+          maxy6++;
+        } else if (miny6 < 25) {
+          c_car6.position.y += carVelocity6;
+          miny6++;
+        }
+        if (maxy6 == 25 && miny6 == 25) {
+          maxy6 = reset();
+          miny6 = reset();
+        }
+
+        if (maxy7 < 50) {
+          c_car7.position.y -= carVelocity7;
+          maxy7++;
+        } else if (miny7 < 50) {
+          c_car7.position.y += carVelocity7;
+          miny7++;
+        }
+        if (maxy7 == 50 && miny7 == 50) {
+          maxy7 = reset();
+          miny7 = reset();
+        }
+
+        if (maxy8 < 40) {
+          c_car8.position.y -= carVelocity8;
+          maxy8++;
+        } else if (miny8 < 40) {
+          c_car8.position.y += carVelocity8;
+          miny8++;
+        }
+        if (maxy8 == 40 && miny8 == 40) {
+          maxy8 = reset();
+          miny8 = reset();
+        }
+        //boomerang
+        if (topeMasX < 50) {
+          if (topeMasX < 25) {
+            arm.rotation.x += pendulumVelocity;
+            pendulumVelocity += accel;
+            topeMasX++;
+          } else {
+            arm.rotation.x += pendulumVelocity;
+            pendulumVelocity -= desAccel;
+            topeMasX++;
+          }
+        } else if (topeMenosX < 50) {
+          if (topeMenosX < 25) {
+            arm.rotation.x -= pendulumVelocity;
+            pendulumVelocity += accel;
+            topeMenosX++;
+          } else {
+            arm.rotation.x -= pendulumVelocity;
+            pendulumVelocity -= desAccel;
+            topeMenosX++;
+          }
+        }
+        if (topeMasX == 50 && topeMenosX == 50) {
+          topeMasX = reset();
+          topeMenosX = reset();
+          pendulumVelocity = reset();
+        }
+        // Carrusel
+        c_mechanism.rotation.y += 0.015;
+        //platillo.rotation.x+0.057;
+        platillo.rotation.y += 0.05;
+        renderer.render(scene, camera);
+      };
+
+      render();
+    </script>
+</body>
+</html>
