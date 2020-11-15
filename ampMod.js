@@ -64,3 +64,7 @@ function drawText(modFreq, modAmp) {
   text('Modulator Frequency: ' + modFreq.toFixed(3) + ' Hz', 20, 20);
   text('Modulator Amplitude: ' + modAmp.toFixed(3), 20, 40);
 }
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}

@@ -20,3 +20,7 @@ function draw() {
 
   //Draw the offscreen buffer to the screen with image()
 }
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
