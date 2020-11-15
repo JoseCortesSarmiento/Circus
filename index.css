@@ -1,16 +1,32 @@
-.flex-container{
+.first{
     display: flex;
     justify-content: left;
     padding-left: 50px;
     padding-top: 80px;
+    padding-bottom: 0;
 }
 
 p{
     font-family: 'Montserrat';
-    font-size: 60px;
-    color: #832161;
+    font-size: 50px;
+    font-weight: 700;
+    color: #073B4C;
 }
 
 .animate__bounceInLeft{
     --animate-duration: 3s;
 }
+
+.animate__bounceInRight{
+    --animate-duration: 3s;
+}
+
+.second {
+    display: flex;
+    justify-content: left;
+    padding-top: 0;
+    padding-left: 800px;
+}
+
+
+
