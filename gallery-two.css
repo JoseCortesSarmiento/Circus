@@ -1,0 +1,16 @@
+.flex-container{
+    display: flex;
+    padding-left: 100px;
+}
+
+p{
+    font-family: 'Montserrat';
+    font-size: 60px;
+    color:white;
+    text-align: center; 
+}
+
+.animate__tada{
+    --animate-duration: 5s;
+
+}
