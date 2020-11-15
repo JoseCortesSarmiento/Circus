@@ -1,0 +1,17 @@
+.flex-container{
+    display: flex;
+    padding-left: 100px;
+}
+
+p{
+    font-family: 'Montserrat';
+    font-size: 60px;
+    color:grey;
+    text-align: center; 
+}
+
+.animate__pulse{
+    --animate-duration: 5s;
+    --animate-repeat: 5;
+
+}
