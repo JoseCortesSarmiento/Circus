@@ -22,3 +22,7 @@ function draw() {
     ellipse(mouseX, mouseY, 2, 2);
   }
 }
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}

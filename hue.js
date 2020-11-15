@@ -17,3 +17,7 @@ function draw() {
     lastBar = whichBar;
   }
 }
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}

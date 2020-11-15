@@ -109,3 +109,7 @@ function mousePressed(event) {
 function mouseReleased() {
   osc.fade(0,0.5);
 }
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
+}
