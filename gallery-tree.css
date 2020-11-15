@@ -1,0 +1,16 @@
+.flex-container{
+    display: flex;
+    padding-left: 100px;
+}
+
+p{
+    font-family: 'Montserrat';
+    font-size: 50px;
+    color:rgb(125, 96, 146);
+    text-align: center; 
+}
+
+.animate__wobble{
+    --animate-duration: 3s;
+
+}
